@@ -28,6 +28,14 @@ The list printed by `uinputremapper.py`  is the same order the program will deci
 
 If this device name issue causes you any issues open an issue and I'll get around to fixing it.
 
+## Requirements
+
+In addition to making sure that your user is either in the `input` group you also have to have the following python modules installed:
+
+* `evdev` - `pip3 install evdev`
+
+  The rest of the modules used should be installed in a basic python installation
+
 ## WHY???
 
 There are other easier and more reliable ways to remap your qwerty keyboard to whatever layout you desire but from what I googled before working on this most relied on using some part of the X11 system which means that the remap wont work if you use wayland or in the TTY thing (CTRL+ALT+1). So i threw this together over a few weeks to the point it was semi usable and slapped it on github in case anyone else was looking for a universal solution like I was.
