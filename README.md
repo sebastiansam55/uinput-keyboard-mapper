@@ -56,7 +56,15 @@ I use only the dvorak so I don't guarantee the other layouts are correct at all.
 
 ### Startup?
 
-You can probably add it to the startup programs in ubuntu I have added it but have not tested it extensively (or at all)
+On my computer I have it setup to launch via chron (`sudo crontab -e`);
+`@reboot /path/to/shellscript/with/options`
+
+Where my script (which is executable) looks like this;
+```bash
+python3 /path/uinput-keyboard-mapper/uinputremapper.py --grab_name "Keychron K8 Keychron K8" -l dvorak -v
+```
+
+
 
 ## Security
 
