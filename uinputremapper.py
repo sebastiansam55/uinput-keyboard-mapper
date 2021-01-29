@@ -39,14 +39,33 @@ if args.numberpad:
 def get_devices():
     return [evdev.InputDevice(path) for path in evdev.list_devices()]
 
-devices = get_devices()
+def grab_device(devices, descriptor):
+    #determine if descriptor is a path or a name
+    return_device = None
+    if len(descriptor) <= 2: #assume that people don't have more than 99 input devices
+        descriptor = "/dev/input/event"+descriptor
+    if "/dev/" in descriptor: #assume function was passed a path
+        for device in devices:
+            if descriptor==device.path:
+                device.close()
+                return_device = evdev.InputDevice(device.path)
+            else:
+                device.close()
+    else: #assume that function was passed a plain text name
+        for device in devices:
+            if descriptor==device.name:
+                device.close()
+                return_device = evdev.InputDevice(device.path)
+            else:
+                device.close()
 
-i=0
-for device in devices:
-    i+=1
-    if args.list_devices: print(device.path, device.name, device.phys)
+    return return_device
 
-if args.list_devices: sys.exit()
+if args.list_devices:
+    for device in get_devices():
+        print(device.path, device.name, device.phys)
+
+
 if args.grab_name:
     proper_name = args.grab_name
 else:
@@ -175,20 +194,17 @@ def event_loop(keybeeb):
 
 
 time.sleep(1)
-keybeeb = grab_dev(proper_name)
+keybeeb = grab_device(get_devices(), proper_name)
 
 if keybeeb is None:
     sys.exit("Improperly selected device")
 
 while True:
     devices = get_devices()
-    keybeeb = grab_dev(proper_name)
+    keybeeb = grab_device(devices, proper_name)
     if keybeeb is not None:
         print("GRABBING FOR REMAPPING: "+str(keybeeb))
         keybeeb.grab()
         event_loop(keybeeb)
     print("Device probably was disconnected")
     time.sleep(5)
-# event_loop(keybeeb)
-
-#handle OS ERROR somewhere
