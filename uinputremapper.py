@@ -75,7 +75,44 @@ qwerty_to_workman_map = {
 
 #TODO add some way to toggle an "internal numberpad" like found on some laptops
 qwerty_internal_numberpad = {
-    
+# created based on layout shown here https://www.dummies.com/computers/pcs/how-to-use-the-numeric-keypad-on-your-laptop/
+    e.KEY_M: e.KEY_KP0,
+    e.KEY_J: e.KEY_KP1,
+    e.KEY_K: e.KEY_KP2,
+    e.KEY_L: e.KEY_KP3,
+    e.KEY_U: e.KEY_KP4,
+    e.KEY_I: e.KEY_KP5,
+    e.KEY_O: e.KEY_KP6,
+    e.KEY_7: e.KEY_KP7,
+    e.KEY_8: e.KEY_KP8,
+    e.KEY_9: e.KEY_KP9,
+    e.KEY_0: e.KEY_KPSLASH,
+    e.KEY_P: e.KEY_KPASTERISK,
+    e.KEY_SEMICOLON: e.KEY_KPMINUS,
+    e.KEY_SLASH: e.KEY_KPPLUS,
+    # e.KEY_: e.KEY_KPENTER,
+    e.KEY_COMMA: e.KEY_KPCOMMA,
+    e.KEY_DOT: e.KEY_KPDOT,
+}
+
+dvorak_internal_numberpad = {
+    e.KEY_M: e.KEY_KP0,
+    e.KEY_H: e.KEY_KP1,
+    e.KEY_T: e.KEY_KP2,
+    e.KEY_N: e.KEY_KP3,
+    e.KEY_G: e.KEY_KP4,
+    e.KEY_C: e.KEY_KP5,
+    e.KEY_R: e.KEY_KP6,
+    e.KEY_7: e.KEY_KP7,
+    e.KEY_8: e.KEY_KP8,
+    e.KEY_9: e.KEY_KP9,
+    e.KEY_0: e.KEY_KPSLASH,
+    e.KEY_L: e.KEY_KPASTERISK,
+    e.KEY_S: e.KEY_KPMINUS,
+    e.KEY_Z: e.KEY_KPPLUS,
+    # e.KEY_: e.KEY_KPENTER,
+    e.KEY_W: e.KEY_KPCOMMA,
+    e.KEY_V: e.KEY_KPDOT,
 }
 
 if args.layout=="dvorak":
