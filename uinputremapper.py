@@ -64,7 +64,9 @@ qwerty_to_dvorak_map = {
 qwerty_to_colemak_map = {
     e.KEY_E: e.KEY_F, e.KEY_R: e.KEY_P, e.KEY_T: e.KEY_G, e.KEY_Y: e.KEY_J, e.KEY_U: e.KEY_L, e.KEY_I: e.KEY_U, e.KEY_O: e.KEY_Y, e.KEY_P: e.KEY_SEMICOLON,
     e.KEY_S: e.KEY_R, e.KEY_D: e.KEY_S, e.KEY_F: e.KEY_T, e.KEY_G: e.KEY_D, e.KEY_H: e.KEY_H, e.KEY_J: e.KEY_N, e.KEY_K: e.KEY_E, e.KEY_L:e.KEY_I, e.KEY_SEMICOLON: e.KEY_O,
-    e.KEY_N: e.KEY_K
+    e.KEY_N: e.KEY_K,
+    #colemak has backspace as left shift and right alt as alt_gr
+    e.KEY_LEFTSHIFT: e.KEY_BACKSPACE, e.KEY_RIGHTALT: 84
 }
 
 qwerty_to_workman_map = {
