@@ -29,7 +29,7 @@ parser.add_argument('-n', '--numberpad', dest="numberpad", action="store", help=
 # parser.add_argument('--raw_config', dest="raw_config", help="TODO raw file with just ints")
 
 args = parser.parse_args()
-print(args)
+if args.logging: print(args)
 if args.numberpad:
     numpad_toggle = [int(key) for key in args.numberpad.split(",")]
     if args.logging:
