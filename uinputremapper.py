@@ -23,11 +23,18 @@ parser.add_argument('--dev_name', default="Remapped Keyboard", dest='dev_name', 
 parser.add_argument('-ls', '--list', action="store_true", dest="list_devices", help="List attached available devices")
 parser.add_argument('-c', '--config', dest="config_dest", help="Path to config file")
 parser.add_argument('-v', '--verbose', dest="logging", action="store_true", help="Increase logging")
+parser.add_argument('-n', '--numberpad', dest="numberpad", action="store", help="Embed number pad. Provide comma separated list of keycodes to activate/decativate")
+#26,56,102 mould be LEFTCTRL,LEFTALT,LEFTSHIFT+HOME
 #TODO
 # parser.add_argument('--raw_config', dest="raw_config", help="TODO raw file with just ints")
 
 args = parser.parse_args()
 print(args)
+if args.numberpad:
+    numpad_toggle = [int(key) for key in args.numberpad.split(",")]
+    if args.logging:
+        print(numpad_toggle, "bound to number pad toggle")
+
 
 def get_devices():
     return [evdev.InputDevice(path) for path in evdev.list_devices()]
@@ -117,72 +124,53 @@ dvorak_internal_numberpad = {
 
 if args.layout=="dvorak":
     default_map = qwerty_to_dvorak_map
+    numberpad_map = qwerty_internal_numberpad
 elif args.layout=="colemak":
     default_map = qwerty_to_colemak_map
 elif args.layout=="workman":
     default_map = qwerty_to_workman_map
 else:
-    #add option here to check if a RAW config file has been provided
+    #TODO add option here to check if a RAW config file has been provided
     sys.exit("No layout provided exiting")
-
-#past here will probably end up grabbing a keyboard for remapping
 
 ui = evdev.UInput(name=args.dev_name)
 
-def grab_dev(name):
-    keybeeb = None
-    for device in devices:
-        if proper_name==device.name:
-            device.close()
-            keybeeb = evdev.InputDevice(device.path)
-        else:
-            device.close()
-
-    return keybeeb
-
-
 def event_loop(keybeeb):
-    held_modifiers = [e.KEY_LEFTSHIFT, e.KEY_RIGHTSHIFT]
-    toggle_modifiers = [e.KEY_SCROLLLOCK, e.KEY_CAPSLOCK]
     keybeeb_name = keybeeb.name
     try:
-        modifiers = []
-        for event in keybeeb.read_loop():
-            ev_type = event.type
-            ev_code = event.code
-            ev_value = event.value
-            #held modifier processing
-            if ev_code in held_modifiers:
-                if ev_value == 1: #pressed down
-                    modifiers.append(ev_code)
-                elif ev_value == 0: # released
-                    if ev_code in modifiers: #chec
-                        modifiers.remove(ev_code)
-            if ev_code in toggle_modifiers:
-                if ev_value == 1:
-                    modifiers.append(ev_code)
-                elif ev_value == 0:
-                    if ev_code in modifiers:
-                        modifiers.remove(ev_code)
-            # TODO add support for "remapping" keys when modified (to be used for maintaining muscle memory for shortcuts)
-            # print(modifiers)[]
-            # if (e.KEY_LEFTSHIFT in modifiers or e.KEY_RIGHTSHIFT in modifiers): #if shift button is being held
-            #     if ev_code in shift_map:
-            #         outcode = shift_map[ev_code]
-            # elif (e.KEY_RIGHTCTRL in modifiers or e.KEY_LEFTCTRL in modifiers):
-            #     if ev_code in ctrl_map:
-            #         outcode = ctrl_map[ev_code]
-            if ev_code in default_map: #default no modifiers held
-                if ev_code in default_map:
-                    outcode = default_map[ev_code]
-            else:
-                outcode = ev_code
-            ui.write(ev_type, outcode, ev_value)
-            if args.logging: print(event)
+        held_keys = []
+        numberpad = False
+        for ev in keybeeb.read_loop():
+            outcode = ev.code #key not found in map send unmodified keycode
+            if ev.value == 1: #modifier pressed down
+                held_keys.append(ev.code)
+            elif ev.value == 0: #modifier released!
+                if ev.code in held_keys:
+                    held_keys.remove(ev.code)
+            if args.numberpad:
+                print(held_keys)
+                all_held = True
+                for key in numpad_toggle:
+                    if key not in held_keys:
+                        all_held=False
+                        break
+                if all_held:
+                    print("toggle numpad")
+                    ui.write(e.EV_KEY, e.KEY_NUMLOCK, 1)
+                    ui.write(e.EV_KEY, e.KEY_NUMLOCK, 0)
+                    numberpad = not numberpad
+
+
+            if ev.code in default_map: #default no modifiers held
+                if ev.code in default_map:
+                    outcode = default_map[ev.code]
+            if numberpad and ev.code in numberpad_map:
+                outcode = numberpad_map[ev.code]
+
+            ui.write(ev.type, outcode, ev.value)
+            if args.logging: print(ev)
     except OSError:
-    # ui.close()
         print("device disconnected!")
-        # event_loop(grab_dev(keybeeb_name))
 
 
 
