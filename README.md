@@ -7,7 +7,7 @@ The program either has to be run as root or you have to add the user running the
 
 `python3 uinputremapper.py --grab_name "<keyboard name>" -l dvorak`
 
-Will try to grab the keyboard with the specified name and remap it from an assumed qwerty layout to dvorak layout. Only dvorak and colemak (does not swap backspace) are currently supported. 
+Will try to grab the keyboard with the specified name and remap it from an assumed qwerty layout to dvorak layout. Only dvorak and colemak (no alt-gr support!) are currently supported. 
 
 You can use `--dev_name` if you wish to control what the new keyboard device will be called. 
 
@@ -26,7 +26,27 @@ The Keychron K8 shows up twice, one is for the regular keyboard and one is for t
 
 The list printed by `uinputremapper.py`  is the same order the program will decide which device to grab based on name match, and it will use the first match that it finds so if the media control version shows above the regular keyboard name and they both have identical device names you will run into issues. 
 
-If this device name issue causes you any issues open an issue and I'll get around to fixing it.
+If this device name issue causes you any issues open an issue and I'll get around to fixing it. The program also accepts the path to the device or even the number of the device as an option. Note that the device number can and will change. 
+
+## Config File
+The program can accept a json file with in the following type of format;
+```json
+{
+    "logging": false,
+    "layout": "numberpad",
+    "grab_name": "AT Translated Set 2 keyboard",
+    "dev_name": "Dvorak Keyboard",
+    "numberpad": [29,56,102],
+    "toggle": [29,56,107]
+}
+```
+The options are directly related to the flags used by `uinputremapper.py`. With this particular config it will enable an "embedded" number pad when you press the key combination as described in the `numberpad option`. With the rest of the keys operating as expected for qwerty layout. 
+
+The list of numbers provided in `numberpad` can be found with `evtest`, `xev` or by running this program with the `-v` flag.
+
+Toggle operates in a similar way, turning the map on or off. In the example config above pressing `LeftCtrl+LeftShift+End` will switch the keyboard from dvorak back to qwerty.
+
+Both of the toggle option have a cooldown of 2 seconds as otherwise they will fire a number of times even when the keys are held for only a couple of seconds.
 
 ## Requirements
 
@@ -52,16 +72,17 @@ Additionally some devices (like my Keychron K8) have different `uinput` names de
 
 The program should survive and try to regrab the device every 5 seconds if the device is disconnected or interrupted in some way (sleeping/disconnect).
 
-I use only the dvorak so I don't guarantee the other layouts are correct at all.
+I use only the dvorak so I don't guarantee the other layouts are correct at all. ALT-GR is weird. Doesn't seem like there is a specific scan code that `evdev` has that is related to it. 
 
 ### Startup?
 
-On my computer I have it setup to launch via chron (`sudo crontab -e`);
+On my computer I have it setup to launch via cron at startup. (`sudo crontab -e`);
+
 `@reboot /path/to/shellscript/with/options`
 
 Where my script (which is executable) looks like this;
 ```bash
-python3 /path/uinput-keyboard-mapper/uinputremapper.py --grab_name "Keychron K8 Keychron K8" -l dvorak -v
+python3 /path/uinput-keyboard-mapper/uinputremapper.py --grab_name "Keychron K8 Keychron K8" -l dvorak
 ```
 
 
@@ -69,3 +90,8 @@ python3 /path/uinput-keyboard-mapper/uinputremapper.py --grab_name "Keychron K8 
 ## Security
 
 There are considerations to be made about adding the user to the input group or about running the program as root, feel free to make them.
+
+## TODO
+Add alternate fallback device name flag that is only captured when the primary is not found.
+
+Map for common keys to `evdev` keycodes. Using the int values is not the ideal solution but is the fastest one.

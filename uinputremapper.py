@@ -21,19 +21,48 @@ parser.add_argument('-l', '--layout', dest="layout", help="Common name of layout
 parser.add_argument('--grab_name', dest="grab_name", help="Exact Name of keyboard to grab")
 parser.add_argument('--dev_name', default="Remapped Keyboard", dest='dev_name', help="Name to use for the newly created uinput device")
 parser.add_argument('-ls', '--list', action="store_true", dest="list_devices", help="List attached available devices")
-parser.add_argument('-c', '--config', dest="config_dest", help="Path to config file")
+parser.add_argument('-c', '--config', dest="config", help="Path to config file")
 parser.add_argument('-v', '--verbose', dest="logging", action="store_true", help="Increase logging")
 parser.add_argument('-n', '--numberpad', dest="numberpad", action="store", help="Embed number pad. Provide comma separated list of keycodes to activate/decativate")
-#26,56,102 mould be LEFTCTRL,LEFTALT,LEFTSHIFT+HOME
+parser.add_argument('-t', '--toggle', dest="toggle", action="store", help="Toggle remap on/off. Provide comma separated list of keycodes to activate/decativate")
+#29,56,102 mould be LEFTCTRL,LEFTALT,LEFTSHIFT+HOME
 #TODO
 # parser.add_argument('--raw_config', dest="raw_config", help="TODO raw file with just ints")
 
 args = parser.parse_args()
+
+if args.config:
+    try:
+        f = open(args.config, 'r')
+        data = json.loads(f.read())
+        args.logging = data.get('logging')
+        args.layout = data.get('layout')
+        args.grab_name = data.get('grab_name')
+        args.dev_name = data.get('dev_name')
+        args.numberpad = data.get('numberpad')
+        args.toggle = data.get('toggle')
+    except:
+        sys.exit("Error loading config files")
+
+
+
 if args.logging: print(args)
 if args.numberpad:
-    numpad_toggle = [int(key) for key in args.numberpad.split(",")]
+    if type(args.numberpad)==list:
+        numpad_toggle =  args.numberpad
+    else:
+        numpad_toggle = [int(key) for key in args.numberpad.split(",")]
     if args.logging:
         print(numpad_toggle, "bound to number pad toggle")
+
+if args.list_devices:
+    for device in get_devices():
+        print(device.path, device.name, device.phys)
+
+if args.grab_name:
+    proper_name = args.grab_name
+else:
+    sys.exit("Grab name not provided")
 
 
 def get_devices():
@@ -60,24 +89,6 @@ def grab_device(devices, descriptor):
                 device.close()
 
     return return_device
-
-if args.list_devices:
-    for device in get_devices():
-        print(device.path, device.name, device.phys)
-
-
-if args.grab_name:
-    proper_name = args.grab_name
-else:
-    sys.exit("Grab name not provided")
-
-def load_config(path):
-    try:
-        f = open(path, 'r')
-        data = json.loads(f.read())
-        return eval("".join(data['default_map']))
-    except:
-        sys.exit("Error loading config files")
 
 qwerty_to_dvorak_map = {
 #top row is similar for dvorak
@@ -144,6 +155,9 @@ dvorak_internal_numberpad = {
 if args.layout=="dvorak":
     default_map = qwerty_to_dvorak_map
     numberpad_map = qwerty_internal_numberpad
+elif args.layout=="numberpad":
+    default_map = {}
+    numberpad_map = qwerty_internal_numberpad
 elif args.layout=="colemak":
     default_map = qwerty_to_colemak_map
 elif args.layout=="workman":
@@ -154,11 +168,22 @@ else:
 
 ui = evdev.UInput(name=args.dev_name)
 
+def check_held(held_keys, key_list):
+    all_held = True
+    for key in key_list:
+        if key not in held_keys:
+            all_held=False
+            break
+    return all_held
+
 def event_loop(keybeeb):
     keybeeb_name = keybeeb.name
     try:
         held_keys = []
         numberpad = False
+        toggle = False
+        numberpad_time = time.time()
+        toggle_time = time.time()
         for ev in keybeeb.read_loop():
             outcode = ev.code #key not found in map send unmodified keycode
             if ev.value == 1: #modifier pressed down
@@ -167,20 +192,23 @@ def event_loop(keybeeb):
                 if ev.code in held_keys:
                     held_keys.remove(ev.code)
             if args.numberpad:
-                print(held_keys)
-                all_held = True
-                for key in numpad_toggle:
-                    if key not in held_keys:
-                        all_held=False
-                        break
-                if all_held:
-                    print("toggle numpad")
+                # print(held_keys)
+                if check_held(held_keys, numpad_toggle) and (time.time()-numberpad_time)>=2:
+                    numberpad_time = time.time()
                     ui.write(e.EV_KEY, e.KEY_NUMLOCK, 1)
                     ui.write(e.EV_KEY, e.KEY_NUMLOCK, 0)
                     numberpad = not numberpad
+                    print("Toggle numpad:", numberpad)
+            if args.toggle:
+                if check_held(held_keys, args.toggle) and (time.time()-toggle_time)>=2:
+                    toggle_time = time.time()
+                    toggle = not toggle
+                    print("Toggle layout:", toggle)
 
 
-            if ev.code in default_map: #default no modifiers held
+
+
+            if not toggle and ev.code in default_map: #default no modifiers held
                 if ev.code in default_map:
                     outcode = default_map[ev.code]
             if numberpad and ev.code in numberpad_map:

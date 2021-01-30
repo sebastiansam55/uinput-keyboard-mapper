@@ -1,0 +1,8 @@
+{
+    "logging": false,
+    "layout": "dvorak",
+    "grab_name": "AT Translated Set 2 keyboard",
+    "dev_name": "Dvorak Keyboard",
+    "numberpad": [29,56,102],
+    "toggle": [29,56,107]
+}
