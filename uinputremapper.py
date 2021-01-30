@@ -44,7 +44,9 @@ if args.config:
     except:
         sys.exit("Error loading config files")
 
-
+if args.toggle:
+    if not type(args.toggle)==list:
+        args.toggle = [int(key) for key in args.toggle.split(",")]
 
 if args.logging: print(args)
 if args.numberpad:
