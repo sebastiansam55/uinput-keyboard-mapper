@@ -181,28 +181,22 @@ def check_held(held_keys, key_list):
 def event_loop(keybeeb):
     keybeeb_name = keybeeb.name
     try:
-        held_keys = []
         numberpad = False
         toggle = False
         numberpad_time = time.time()
         toggle_time = time.time()
         for ev in keybeeb.read_loop():
             outcode = ev.code #key not found in map send unmodified keycode
-            if ev.value == 1: #modifier pressed down
-                held_keys.append(ev.code)
-            elif ev.value == 0: #modifier released!
-                if ev.code in held_keys:
-                    held_keys.remove(ev.code)
             if args.numberpad:
-                # print(held_keys)
-                if check_held(held_keys, numpad_toggle) and (time.time()-numberpad_time)>=2:
+                # print(keybeeb.active_keys())
+                if check_held(keybeeb.active_keys(), numpad_toggle) and (time.time()-numberpad_time)>=2:
                     numberpad_time = time.time()
                     ui.write(e.EV_KEY, e.KEY_NUMLOCK, 1)
                     ui.write(e.EV_KEY, e.KEY_NUMLOCK, 0)
                     numberpad = not numberpad
                     print("Toggle numpad:", numberpad)
             if args.toggle:
-                if check_held(held_keys, args.toggle) and (time.time()-toggle_time)>=2:
+                if check_held(keybeeb.active_keys(), args.toggle) and (time.time()-toggle_time)>=2:
                     toggle_time = time.time()
                     toggle = not toggle
                     print("Toggle layout:", toggle)
